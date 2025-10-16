@@ -23,7 +23,7 @@ memory_usages_output = linux_command("free", "-m")  # stored memory usages
 
 # saved the output into a file
 with open(filename, "w")as file:
-    file.write("$$$ Author: MD ISTIAK AHMED $$$\n#############################\n") # showcase script writer name at the top
+    file.write("$$$ Author: MD ISTIAK AHMED $$$\n###############################\n") # showcase script writer name at the top
     file.write("\n=== System Info ===\n")
     for key, value in system_info.items():
         file.write(f"{key}: {value}\n")
