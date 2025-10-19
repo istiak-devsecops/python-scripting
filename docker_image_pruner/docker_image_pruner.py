@@ -9,10 +9,10 @@ log_dir = "/tmp/docker_prune_logs"
 log_retention_days = 7
 prune_command = ["docker", "system", "prune", "-a"]
 
-def os_checker(func):
+def os_checker(func):   # decorator function
     @wraps(func)
     def wrapper(*args, **kwargs):
-        if platform.system().lower() == "linux":
+        if platform.system().lower() == "linux": # check if the system is linux
             return func(*args, **kwargs)
         else:
             print(f"skipped '{func.__name__}': not running on linux.")
@@ -21,29 +21,29 @@ def os_checker(func):
      
 
 @os_checker
-def rotate_logs():
+def rotate_logs():      # log rotation function
     now = datetime.datetime.now()
-    cutoff = now - datetime.timedelta(days=LOG_RETENTION_DAYS)
+    cutoff = now - datetime.timedelta(days=log_retention_days)
 
-    if not os.path.exists(LOG_DIR):
-        os.makedirs(LOG_DIR)
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)    # if path doesn't exist create it
         return
 
-    for filename in os.listdir(LOG_DIR):
-        filepath = os.path.join(LOG_DIR, filename)
+    for filename in os.listdir(log_dir):    
+        filepath = os.path.join(log_dir, filename)
         if os.path.isfile(filepath):
-            mtime = datetime.datetime.fromtimestamp(os.path.getmtime(filepath))
+            mtime = datetime.datetime.fromtimestamp(os.path.getmtime(filepath)) # get the right aged file
             if mtime < cutoff:
-                os.remove(filepath)
+                os.remove(filepath) # remove the correct age file
                 print(f"Deleted old log: {filepath}")
 
 @os_checker
 def run_prune():
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    log_file = os.path.join(LOG_DIR, f"prune_log_{timestamp}.txt")
+    log_file = os.path.join(log_dir, f"prune_log_{timestamp}.txt")
 
     try:
-        result = subprocess.run(PRUNE_COMMAND, capture_output=True, text=True, check=True)
+        result = subprocess.run(prune_command, capture_output=True, text=True, check=True)
         with open(log_file, "w") as f:
             f.write(result.stdout)
         print(f"Prune completed. Log saved to: {log_file}")
