@@ -2,49 +2,54 @@ import subprocess
 import platform
 import datetime
 import os
+from functools import wraps
 
 # log directory
 log_dir = "/tmp/docker_prune_logs"
-os.makedirs(log_dir, exist_ok=True)
+log_retention_days = 7
+prune_command = ["docker", "system", "prune", "-a"]
 
-# log file name with timestamp
-timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-log_file = os.path.join(log_dir, f"docker_prune_{timestamp}.log")
+def os_checker(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        if platform.system().lower() == "linux":
+            return func(*args, **kwargs)
+        else:
+            print(f"skipped '{func.__name__}': not running on linux.")
+            return None
+    return wrapper
+     
 
-# Check OS
-if platform.system().lower() == "linux":
+@os_checker
+def rotate_logs():
+    now = datetime.datetime.now()
+    cutoff = now - datetime.timedelta(days=LOG_RETENTION_DAYS)
+
+    if not os.path.exists(LOG_DIR):
+        os.makedirs(LOG_DIR)
+        return
+
+    for filename in os.listdir(LOG_DIR):
+        filepath = os.path.join(LOG_DIR, filename)
+        if os.path.isfile(filepath):
+            mtime = datetime.datetime.fromtimestamp(os.path.getmtime(filepath))
+            if mtime < cutoff:
+                os.remove(filepath)
+                print(f"Deleted old log: {filepath}")
+
+@os_checker
+def run_prune():
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    log_file = os.path.join(LOG_DIR, f"prune_log_{timestamp}.txt")
+
     try:
-        # Run docker system prune -a -f
-        result = subprocess.run(
-            ["docker", "system", "prune", "-a", "-f"],
-            capture_output=True,
-            text=True
-        )
-
-        # Write output and errors to log file
+        result = subprocess.run(PRUNE_COMMAND, capture_output=True, text=True, check=True)
         with open(log_file, "w") as f:
-            f.write(f"Timestamp: {timestamp}\n")
-            f.write("="*60 + "\n")
-            f.write("STDOUT:\n")
-            f.write(result.stdout + "\n")
-            f.write("STDERR:\n")
-            f.write(result.stderr + "\n")
-            f.write("="*60 + "\n")
-            f.write("Command executed successfully.\n" if result.returncode == 0 else "Command failed.\n")
+            f.write(result.stdout)
+        print(f"Prune completed. Log saved to: {log_file}")
+    except subprocess.CalledProcessError as e:
+        print(f"Error running prune: {e.stderr}")
 
-        print(f"✅ Prune completed. Log saved to {log_file}")
-
-    except Exception as e:
-        print(f"Error running docker prune: {e}")
-else:
-    print("This script only works on Linux.")
-
-# Log rotation — delete logs older than 7 days
-now = datetime.datetime.now()
-for filename in os.listdir(log_dir):
-    file_path = os.path.join(log_dir, filename)
-    if os.path.isfile(file_path):
-        file_time = datetime.datetime.fromtimestamp(os.path.getmtime(file_path))
-        if (now - file_time).days > 7:
-            os.remove(file_path)
-            print(f"🗑️ Deleted old log: {filename}")
+if __name__ == "__main__":
+    rotate_logs()
+    run_prune()
