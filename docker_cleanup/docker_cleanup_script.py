@@ -60,6 +60,6 @@ class DockerCleaner:
         print("cleanup complete...")
 
 
-if __name__ = "__main__":
-cleaner = DockerCleaner()
-cleaner.main()
+if __name__ == "__main__":
+    cleaner = DockerCleaner()
+    cleaner.main()
