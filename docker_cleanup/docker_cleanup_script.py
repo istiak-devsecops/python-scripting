@@ -29,4 +29,14 @@ class DockerCleaner:
             except Exception as e:
                 print(f"Failed to remove {image.short_id}:{e}")
 
+    def clean_networks(self):
+        print("clearning unused network...")
+        networks = self.client.networks.list()
+        for network in networks:
+            if network.name not in ["bridge","host","none"]:
+                try:
+                    print(f"Removing network: {network.name}")
+                    network.remvoe()
+                except Exception as e:
+                    print(f"Failed to remvoe {network.name}: {e}")
     
