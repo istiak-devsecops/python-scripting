@@ -51,3 +51,15 @@ class DockerCleaner:
                 print(f"Failed to remove {volume.name}: {e}")
 
     
+    def main(self):
+        print("starting docker cleanup...")
+        self.clean_containers()
+        self.clean_images()
+        self.clean_networks()
+        self.clean_volumes()
+        print("cleanup complete...")
+
+
+if __name__ = "__main__":
+cleaner = DockerCleaner()
+cleaner.main()
