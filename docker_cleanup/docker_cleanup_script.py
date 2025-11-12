@@ -39,4 +39,15 @@ class DockerCleaner:
                     network.remvoe()
                 except Exception as e:
                     print(f"Failed to remvoe {network.name}: {e}")
+
+    def clean_volumes(self):
+        print("cleaning unused volumes...")
+        volumes = self.client.volumes.list(filter={"dangling": True})
+        for volume in volumes:
+            try:
+                print(f"Removing volume: {volume.name}")
+                volume.remove()
+            except Exception as e:
+                print(f"Failed to remove {volume.name}: {e}")
+
     
