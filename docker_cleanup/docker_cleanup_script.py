@@ -18,3 +18,15 @@ class DockerCleaner:
                 container.remove()
             except Exception as e:
                 print(f"Failed to remove {container.name}: {e}")
+    
+    def clean_images(self):
+        print("Removing images...")
+        images = self.client.images.list(filters={"dangling": True})
+        for image in images:
+            try:
+                print(f"Removing image: {image.short_id}")
+                self.client.images.remove(image.id)
+            except Exception as e:
+                print(f"Failed to remove {image.short_id}:{e}")
+
+    
