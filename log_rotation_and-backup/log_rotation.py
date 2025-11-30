@@ -36,3 +36,27 @@ def create_archive(files, backup_dir):
             logging.info(f"Rotated: {file}")
 
     return archive_name
+
+def main():
+    if not backup_dir.exists():
+        backup_dir.mkdir(parents=True)
+
+    old_logs = find_old_logs(log_dir, days_old)
+
+    if not old_logs:
+        print("No files to rotate.")
+        logging.info("No files older than threshold.")
+        return
+
+    archive = create_archive(old_logs, backup_dir)
+    print(f"Archive created: {archive}")
+
+    # Optional cleanup: delete original logs
+    for file in old_logs:
+        file.unlink()
+        logging.info(f"Deleted original: {file}")
+
+    print("Rotation complete!")
+
+if __name__ == "__main__":
+    main()
